@@ -1,42 +1,62 @@
-// const process = require("process");
-// function myfunction(a) {
-//   console.log(process.argv);
-//   if (a > 5) {
-//     console.log("The number you have given is greater than 5");
-//   } else {
-//     console.log("The number you have given is less or equal to 5");
-//   }
-// }
-// myfunction(parseInt(process.argv[2]));
+const http = require("http");
+const url = require("url");
+const fs = require("fs");
+const path = require("path");
 
-// const { error } = require("console");
-// const fs = require("fs");
-// fs.readFile("demo.txt", "utf8", (err, data) => {
-//   if (err) throw err;
-//   console.log(data);
-// });
-
-import http from "http";
-import open from "open";
+// mimeType Object maps each extension to its appropriate content type
+const mimeType = {
+  ".ico": "image/x-icon",
+  ".html": "text/html",
+  ".js": "text/javascript",
+  ".json": "application/json",
+  ".css": "text/css",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".wav": "audio/wav",
+  ".mp3": "audio/mpeg",
+  ".svg": "image/svg+xml",
+  ".pdf": "application/pdf",
+  ".zip": "application/zip",
+  ".doc": "application/msword",
+  ".eot": "application/vnd.ms-fontobject",
+  ".ttf": "application/x-font-ttf",
+};
 
 http
-  .createServer((req, res) => {
-    console.log(req.url);
-    if (req.url == "/") {
-      res.write("this is the home page");
-    } else if (req.url == "/about") {
-      res.write("this is the about page");
-    } else if (req.url == "/contact") {
-      res.write("this is the contact page");
-    } else {
-      res.write("this route does not exit");
+  .createServer((request, response) => {
+    // Parse URL
+    let parsedURL = url.parse(request.url, true);
+    console.log(request.url);
+    console.log(parsedURL);
+    // Remove Extra characters (for example /index.html/ becomes index.html)
+    let file_path = parsedURL.path.replace(/^\/+|\/+$/g, "");
+
+    // Serve index.html as default file
+    if (file_path == "") {
+      file_path = "index.html";
     }
-    // res.statusCode = 200;
-    // res.setHeader("Content-Type", "text/html");
-    // res.write("<h1>Hello nodejs! </h1>");
-    res.end();
+
+    // Construct the file path
+    let file = __dirname + "/public/" + file_path;
+
+    // Read the file and return it on the callback
+    fs.readFile(file, function (err, content) {
+      if (err) {
+        response.writeHead(404);
+        response.end();
+      } else {
+        //specify the content type in the response
+        response.setHeader("X-Content-Type-Options", "nosniff");
+
+        // Extract the extension from the path of the file
+        const extension = path.parse(file).ext;
+
+        // Get the corresponding content-type
+        const mime = mimeType[extension];
+
+        response.writeHead(200, { "Content-type": mime });
+        response.end(content);
+      }
+    });
   })
-  .listen(3000, () => {
-    console.log("server listening for the request");
-    //open("http://localhost:3000");
-  });
+  .listen(3000);
