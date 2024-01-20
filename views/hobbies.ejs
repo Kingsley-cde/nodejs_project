@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Hobbies Page</title>
+  </head>
+  <body>
+    Hobbies of <%=data.name%> are:<br />
+
+    <ul>
+      <% data.hobbies.forEach((item)=>{%>
+      <li><%=item%></li>
+      <%});%>
+    </ul>
+  </body>
+</html>
